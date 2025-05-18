@@ -3,50 +3,52 @@ import mysql.connector
 import csv
 import os
 from uuid import uuid4
+from dotenv import load_dotenv
 
+# Load .env file from the current script's directory
+dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv(dotenv_path)
 
 def connect_db():
-    """Connects to the MySQL database server."""
+    """Connects to the MySQL database server (no database selected yet)."""
     try:
         connection = mysql.connector.connect(
-            host='localhost',
-            user='root',  # Replace with your MySQL username
-            password='6979samZ.@',  # Replace with your MySQL password
+            host=os.getenv('DB_HOST'),
+            user=os.getenv('DB_USER'),
+            password=os.getenv('DB_PASSWORD'),
         )
         return connection
     except mysql.connector.Error as err:
-        print(f"Error connecting to database: {err}")
+        print(f"Error connecting to MySQL server: {err}")
         return None
 
-
 def create_database(connection):
-    """Creates the database ALX_prodev if it does not exist."""
+    """Creates the ALX_prodev database if it does not exist."""
     try:
         cursor = connection.cursor()
         cursor.execute("CREATE DATABASE IF NOT EXISTS ALX_prodev")
+        connection.commit()
         cursor.close()
-        print("Database ALX_prodev created or already exists.")
+        print("Database 'ALX_prodev' created or already exists.")
     except mysql.connector.Error as err:
         print(f"Error creating database: {err}")
 
-
 def connect_to_prodev():
-    """Connects to the ALX_prodev database."""
+    """Connects directly to the ALX_prodev database."""
     try:
         connection = mysql.connector.connect(
-            host='localhost',
-            user='root',  # Replace with your MySQL username
-            password='6979samZ.@',  # Replace with your MySQL password
-            database='ALX_prodev'
+            host=os.getenv('DB_HOST'),
+            user=os.getenv('DB_USER'),
+            password=os.getenv('DB_PASSWORD'),
+            database=os.getenv('DB_NAME')
         )
         return connection
     except mysql.connector.Error as err:
-        print(f"Error connecting to ALX_prodev: {err}")
+        print(f"Error connecting to 'ALX_prodev': {err}")
         return None
 
-
 def create_table(connection):
-    """Creates a table user_data if it does not exist."""
+    """Creates the user_data table if it does not exist."""
     try:
         cursor = connection.cursor()
         cursor.execute("""
@@ -58,16 +60,16 @@ def create_table(connection):
                 INDEX (user_id)
             )
         """)
+        connection.commit()
         cursor.close()
-        print("Table user_data created or already exists.")
+        print("Table 'user_data' created or already exists.")
     except mysql.connector.Error as err:
         print(f"Error creating table: {err}")
 
-
 def insert_data(connection, file_path):
-    """Inserts data into the user_data table from a CSV file."""
+    """Inserts data from a CSV file into the user_data table."""
     if not os.path.exists(file_path):
-        print(f"File {file_path} does not exist.")
+        print(f"File '{file_path}' does not exist.")
         return
 
     try:
@@ -83,8 +85,8 @@ def insert_data(connection, file_path):
                 """, (str(uuid4()), row['name'], row['email'], row['age']))
         connection.commit()
         cursor.close()
-        print("Data inserted successfully.")
+        print("Data inserted successfully from CSV.")
     except mysql.connector.Error as err:
-        print(f"Error inserting data: {err}")
+        print(f" MySQL error while inserting data: {err}")
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"General error while inserting data: {e}")
