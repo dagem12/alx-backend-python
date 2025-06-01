@@ -1,0 +1,61 @@
+pipeline {
+    agent any
+    environment {
+        VENV = 'venv'
+        DOCKER_IMAGE = 'your-dockerhub-username/messaging_app'
+        DOCKER_CREDENTIALS = 'dockerhub-credentials-id' // Add this ID in Jenkins
+    }
+    stages {
+        stage('Clone Repository') {
+            steps {
+                checkout scm
+            }
+        }
+        stage('Set Up Python Environment') {
+            steps {
+                sh '''
+                python3 -m venv ${VENV}
+                . ${VENV}/bin/activate
+                pip install --upgrade pip
+                pip install -r requirements.txt
+                '''
+            }
+        }
+        stage('Run Tests') {
+            steps {
+                sh '''
+                . ${VENV}/bin/activate
+                pytest --junitxml=report.xml
+                '''
+            }
+        }
+        stage('Publish Test Report') {
+            steps {
+                junit 'report.xml'
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    sh '''
+                    docker build -t ${DOCKER_IMAGE}:latest .
+                    '''
+                }
+            }
+        }
+        stage('Push Docker Image') {
+            steps {
+                withDockerRegistry([credentialsId: "${DOCKER_CREDENTIALS}", url: ""]) {
+                    sh '''
+                    docker push ${DOCKER_IMAGE}:latest
+                    '''
+                }
+            }
+        }
+    }
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
