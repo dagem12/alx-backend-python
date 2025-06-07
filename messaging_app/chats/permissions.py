@@ -1,11 +1,27 @@
 from rest_framework import permissions
 
+class IsOwner(permissions.BasePermission):
+    """
+    Custom permission to allow only owners of an object to access it.
+    Assumes the model instance has an `owner` attribute or user field.
+    """
 
-class IsOwnerOrReadOnly(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
-        # Read-only permissions for safe methods (GET, HEAD, OPTIONS)
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        
-        # Write permissions for object owner
-        return obj.user == request.user
+        return obj.owner == request.user
+
+class IsSender(permissions.BasePermission):
+    """
+    Allows only the sender of a message to access/modify it.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        return obj.sender == request.user
+
+
+class IsParticipant(permissions.BasePermission):
+    """
+    Allows only conversation participants to access the conversation.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        return request.user in obj.participants.all()
