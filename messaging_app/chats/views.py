@@ -1,19 +1,12 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
-from rest_framework.decorators import action
-from .models import Conversation, Message, CustomUser
-from .serializers import ConversationSerializer, MessageSerializer
-
-
-from rest_framework import viewsets, permissions, status
-from rest_framework.response import Response
 from .models import Conversation, Message, CustomUser
 from .serializers import ConversationSerializer, MessageSerializer
 from .permissions import IsSender, IsParticipant
 
 class ConversationViewSet(viewsets.ModelViewSet):
     serializer_class = ConversationSerializer
-    permission_classes = [permissions.IsAuthenticated, IsParticipant]
+    permission_classes = [IsParticipant]
 
     def get_queryset(self):
         return Conversation.objects.filter(participants=self.request.user)
@@ -24,9 +17,10 @@ class ConversationViewSet(viewsets.ModelViewSet):
             return Response({"error": "Participants list is required."}, status=status.HTTP_400_BAD_REQUEST)
 
         participants_ids.append(request.user.id)
-        participants = CustomUser.objects.filter(id__in=set(participants_ids))
+        unique_ids = list(set(participants_ids))
+        participants = CustomUser.objects.filter(id__in=unique_ids)
 
-        if participants.count() != len(set(participants_ids)):
+        if participants.count() != len(unique_ids):
             return Response({"error": "Invalid participant IDs."}, status=status.HTTP_400_BAD_REQUEST)
 
         conversation = Conversation.objects.create()
@@ -34,13 +28,10 @@ class ConversationViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(conversation)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    def perform_create(self, serializer):
-        serializer.save()
-
 
 class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
-    permission_classes = [permissions.IsAuthenticated, IsSender]
+    permission_classes = [IsParticipant, IsSender]
 
     def get_queryset(self):
         return Message.objects.filter(conversation__participants=self.request.user)
@@ -64,6 +55,3 @@ class MessageViewSet(viewsets.ModelViewSet):
         message = Message.objects.create(sender=sender, conversation=conversation, content=content)
         serializer = self.get_serializer(message)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def perform_create(self, serializer):
-        serializer.save(sender=self.request.user)
