@@ -74,11 +74,11 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'chats.middleware.RestrictAccessByTimeMiddleware',
+    'chats.middleware.RolepermissionMiddleware', 
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'chats.middleware.RequestLoggingMiddleware',
     'chats.middleware.OffensiveLanguageMiddleware', 
-    'chats.middleware.RolepermissionMiddleware', 
 ]
 
 ROOT_URLCONF = 'messaging_app.urls'
