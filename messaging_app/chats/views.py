@@ -1,4 +1,4 @@
-from .pagination import MessagePagination
+from .pagination import StandardResultsSetPagination
 from .filters import MessageFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, permissions, status
@@ -35,7 +35,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
 class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
     permission_classes = [permissions.IsAuthenticated, IsParticipant, IsSender]
-    pagination_class = MessagePagination
+    pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = MessageFilter
 
