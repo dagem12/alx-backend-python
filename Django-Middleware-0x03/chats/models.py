@@ -19,6 +19,8 @@ class Conversation(models.Model):
     """
     participants = models.ManyToManyField(CustomUser, related_name='conversations')
     created_at = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        ordering = ['-created_at'] 
 
     def __str__(self):
         return f"Conversation {self.id}"
@@ -32,6 +34,7 @@ class Message(models.Model):
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='messages')
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
-
+    class Meta:
+        ordering = ['-timestamp'] 
     def __str__(self):
         return f"{self.sender.username}: {self.content[:30]}"
