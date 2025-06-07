@@ -1,9 +1,14 @@
 import logging
-from datetime import datetime, time
+from datetime import datetime, time as dt_time
+import time
 from django.utils.deprecation import MiddlewareMixin
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from django.http import HttpResponseForbidden
+from django.http import JsonResponse
+
+
+
 logger = logging.getLogger('request_logger')
 
 class RequestLoggingMiddleware(MiddlewareMixin):
@@ -36,20 +41,58 @@ class RequestLoggingMiddleware(MiddlewareMixin):
 class RestrictAccessByTimeMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
-        # Define allowed access time window (6 AM to 9 PM)
-        self.start_time = time(6, 0, 0)   # 6:00:00 AM
-        self.end_time = time(21, 0, 0)    # 9:00:00 PM (21:00)
+     
+        self.start_time = dt_time(6, 0, 0)  
+        self.end_time = dt_time(21, 0, 0)   
 
     def __call__(self, request):
         current_time = datetime.now().time()
 
-        # Check if current time is outside allowed range
-        # Allowed: 06:00 <= current_time <= 21:00
+     
         if not (self.start_time <= current_time <= self.end_time):
-            # Optionally, restrict only chat-related paths here:
-            # if request.path.startswith('/chat/') or whatever your chat URL prefix is
-            # For now, restrict all requests outside time window:
+           
             return HttpResponseForbidden("Chat access is allowed only between 6 AM and 9 PM.")
 
         response = self.get_response(request)
         return response
+
+class OffensiveLanguageMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+       
+        self.ip_message_times = {}
+
+    def __call__(self, request):
+    
+        if request.method == "POST":
+            ip = self.get_client_ip(request)
+            now = time.time()
+            window = 60  
+            limit = 5   
+            
+          
+            timestamps = self.ip_message_times.get(ip, [])
+            
+       
+            timestamps = [t for t in timestamps if now - t < window]
+            
+            if len(timestamps) >= limit:
+             
+                return JsonResponse({"error": "Too many messages sent. Please wait before sending more."}, status=429)
+            
+            
+            timestamps.append(now)
+            self.ip_message_times[ip] = timestamps
+        
+      
+        response = self.get_response(request)
+        return response
+
+    def get_client_ip(self, request):
+     
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0].strip()
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
