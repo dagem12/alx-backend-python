@@ -6,7 +6,7 @@ from .permissions import IsSender, IsParticipant
 
 class ConversationViewSet(viewsets.ModelViewSet):
     serializer_class = ConversationSerializer
-    permission_classes = [IsParticipant]
+    permission_classes = [permissions.IsAuthenticated, IsParticipant]
 
     def get_queryset(self):
         return Conversation.objects.filter(participants=self.request.user)
@@ -31,7 +31,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
 
 class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
-    permission_classes = [IsParticipant, IsSender]
+    permission_classes = [permissions.IsAuthenticated, IsParticipant, IsSender]
 
     def get_queryset(self):
         return Message.objects.filter(conversation__participants=self.request.user)
