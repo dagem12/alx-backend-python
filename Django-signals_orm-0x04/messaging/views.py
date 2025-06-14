@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""View for deleting user account."""
+"""Views for messaging system."""
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect
+from django.shortcuts import render, redirect
 from django.contrib.auth import get_user_model
+from .models import Message
 
 User = get_user_model()
 
@@ -13,4 +14,25 @@ def delete_user(request):
     """
     user = request.user
     user.delete()
-    return redirect('home')  # or any URL you prefer
+    return redirect('home')
+
+@login_required
+def conversation_view(request, receiver_id):
+    """
+    Displays messages between current user and another user,
+    with threaded replies shown recursively.
+    """
+    receiver = User.objects.get(id=receiver_id)
+
+    # Fetch top-level messages (not replies) between the two users
+    messages = Message.objects.filter(
+        sender=request.user,
+        receiver=receiver,
+        parent_message__isnull=True
+    ).select_related('sender', 'receiver').prefetch_related('replies__sender', 'replies__receiver')
+
+    context = {
+        'messages': messages,
+        'receiver': receiver
+    }
+    return render(request, 'messaging/conversation.html', context)
