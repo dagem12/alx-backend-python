@@ -16,6 +16,7 @@ def delete_user(request):
     user.delete()
     return redirect('home')
 
+
 @login_required
 def conversation_view(request, receiver_id):
     """
@@ -24,12 +25,12 @@ def conversation_view(request, receiver_id):
     """
     receiver = User.objects.get(id=receiver_id)
 
-    # Fetch top-level messages (not replies) between the two users
+    # Add .only() to limit the fields fetched
     messages = Message.objects.filter(
         sender=request.user,
         receiver=receiver,
         parent_message__isnull=True
-    ).select_related('sender', 'receiver').prefetch_related('replies__sender', 'replies__receiver')
+    ).only('id', 'sender', 'receiver', 'content', 'timestamp').select_related('sender', 'receiver').prefetch_related('replies__sender', 'replies__receiver')
 
     context = {
         'messages': messages,
@@ -37,9 +38,11 @@ def conversation_view(request, receiver_id):
     }
     return render(request, 'messaging/conversation.html', context)
 
-    def inbox_view(request):
+
+@login_required
+def inbox_view(request):
     """
     Displays unread messages for the logged-in user.
     """
-    unread_messages = Message.unread.unread_for_user(request.user)
+    unread_messages = Message.unread.unread_for_user(request.user).only('id', 'sender', 'content', 'timestamp')
     return render(request, 'messaging/inbox.html', {'unread_messages': unread_messages})
