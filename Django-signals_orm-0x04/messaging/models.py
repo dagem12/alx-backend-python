@@ -3,6 +3,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 import uuid
+from .managers import UnreadMessagesManager
 
 User = get_user_model()
 
@@ -18,7 +19,10 @@ class Message(models.Model):
     edited = models.BooleanField(default=False)
     edited_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='edited_messages')
     parent_message = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='replies')  # 🔁 Added
+    read = models.BooleanField(default=False)
 
+    objects = models.Manager()
+    unread = UnreadMessagesManager()
     def __str__(self):
         return f"Message from {self.sender} to {self.receiver} at {self.timestamp}"
 

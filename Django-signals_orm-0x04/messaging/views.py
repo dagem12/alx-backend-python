@@ -36,3 +36,10 @@ def conversation_view(request, receiver_id):
         'receiver': receiver
     }
     return render(request, 'messaging/conversation.html', context)
+
+    def inbox_view(request):
+    """
+    Displays unread messages for the logged-in user.
+    """
+    unread_messages = Message.unread.unread_for_user(request.user)
+    return render(request, 'messaging/inbox.html', {'unread_messages': unread_messages})
