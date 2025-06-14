@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.contrib.auth import get_user_model
 from .models import Message
+from django.views.decorators.cache import cache_page
 
 User = get_user_model()
 
@@ -18,6 +19,7 @@ def delete_user(request):
 
 
 @login_required
+@cache_page(60)
 def conversation_view(request, receiver_id):
     """
     Displays messages between current user and another user,
@@ -25,7 +27,6 @@ def conversation_view(request, receiver_id):
     """
     receiver = User.objects.get(id=receiver_id)
 
-    # Add .only() to limit the fields fetched
     messages = Message.objects.filter(
         sender=request.user,
         receiver=receiver,
