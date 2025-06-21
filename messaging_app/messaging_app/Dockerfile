@@ -11,7 +11,7 @@ WORKDIR /app
 # Install dependencies
 COPY Requirements.txt .
 RUN pip install --upgrade pip
-RUN pip install -r Requirements.txt
+RUN pip install -r requirements.txt
 
 # Copy the entire project
 COPY . .
