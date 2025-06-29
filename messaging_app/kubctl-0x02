@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Apply blue and green deployments
+kubectl apply -f blue_deployment.yaml
+kubectl apply -f green_deployment.yaml
+
+# Apply the service (initially pointing to green)
+kubectl apply -f kubeservice.yaml
+
+# Get the name of the green pod
+GREEN_POD=$(kubectl get pods -l version=green -o jsonpath="{.items[0].metadata.name}")
+
+# Show logs for green pod
+echo "Logs for green deployment pod ($GREEN_POD):"
+kubectl logs $GREEN_POD
