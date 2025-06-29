@@ -3,11 +3,16 @@ kind: Deployment
 metadata:
   name: messaging-blue
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: messaging
       version: blue
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   template:
     metadata:
       labels:
@@ -16,6 +21,6 @@ spec:
     spec:
       containers:
         - name: messaging-blue
-          image: mwssagin_app:blue
+          image: messaging_app:blue
           ports:
             - containerPort: 8000
