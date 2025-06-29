@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Ensure script stops on errors
+set -e
+
+echo "📦 Scaling Django deployment to 3 replicas..."
+kubectl scale deployment messaging-app-deployment --replicas=3
+
+echo "✅ Scaled deployment. Waiting for pods to be ready..."
+sleep 5
+
+echo "📋 Getting list of pods..."
+kubectl get pods -l app=messaging-app
+
+echo "🚀 Starting load test using wrk..."
+
+# You must have port-forwarding or an accessible IP for this to work
+# Start port-forwarding in the background (adjust as needed)
+kubectl port-forward svc/messaging-app-service 8000:80 &
+PORT_FORWARD_PID=$!
+
+# Wait for port-forward to establish
+sleep 3
+
+# Run wrk for 10 seconds, adjust threads/connections as needed
+wrk -t4 -c20 -d10s http://localhost:8000/
+
+# Kill background port-forward process
+kill $PORT_FORWARD_PID
+
+echo "📊 Monitoring resource usage..."
+kubectl top pods
