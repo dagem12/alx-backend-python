@@ -2,7 +2,7 @@
 
 # kurbeScript - Set up and use Kubernetes locally with Minikube
 
-set -e  # Exit on any error
+set -e 
 
 # Check if minikube is installed
 if ! command -v minikube >/dev/null 2>&1; then
@@ -24,7 +24,7 @@ minikube start
 echo "Verifying cluster info..."
 kubectl cluster-info
 
-# Get the list of pods in all namespaces
+# Get the list of pods in all namespacess
 echo "Retrieving available pods (all namespaces)..."
 kubectl get pods --all-namespaces
 
